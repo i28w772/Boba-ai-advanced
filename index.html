@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#8B5CF6">
+    <title>Boba AI 🧋</title>
+    <style>
+        :root {
+            --boba-purple: #8B5CF6;
+            --boba-dark: #1a1a2e;
+            --boba-surface: #16213e;
+            --boba-text: #e2e8f0;
+            --boba-muted: #94a3b8;
+            --boba-accent: #c084fc;
+            --boba-success: #10b981;
+            --boba-warning: #f59e0b;
+            --boba-error: #ef4444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            background: var(--boba-dark);
+            color: var(--boba-text);
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .app-container {
+            display: flex;
+            height: 100vh;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: var(--boba-surface);
+            border-right: 1px solid rgba(139, 92, 246, 0.2);
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            flex-shrink: 0;
+        }
+
+        .boba-logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .boba-logo .emoji {
+            font-size: 2rem;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-5px); }
+        }
+
+        .new-chat-btn {
+            background: linear-gradient(135deg, var(--boba-purple), var(--boba-accent));
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 600;
+            margin: 20px 0;
+            transition: all 0.2s;
+        }
+
+        .new-chat-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 5px 20px rgba(139, 92, 246, 0.3);
+        }
+
+        .chat-list {
+            flex: 1;
+            overflow-y: auto;
+            margin: 10px 0;
+        }
+
+        .chat-item {
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-bottom: 5px;
+            transition: background 0.2s;
+            font-size: 0.9rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .chat-item:hover {
+            background: rgba(139, 92, 246, 0.1);
+        }
+
+        .chat-item.active {
+            background: rgba(139, 92, 246, 0.2);
+            border-left: 3px solid var(--boba-purple);
+        }
+
+        .settings-btn {
+            background: transparent;
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            color: var(--boba-text);
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+
+        .settings-btn:hover {
+            background: rgba(139, 92, 246, 0.1);
+        }
+
+        /* Main Chat Area */
+        .chat-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: var(--boba-dark);
+        }
+
+        .chat-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid rgba(139, 92, 246, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .provider-badge {
+            background: rgba(139, 92, 246, 0.2);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .messages-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .message {
+            display: flex;
+            gap: 12px;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message.user {
+            flex-direction: row-reverse;
+        }
+
+        .message-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+
+        .message.user .message-avatar {
+            background: var(--boba-purple);
+        }
+
+        .message.assistant .message-avatar {
+            background: linear-gradient(135deg, var(--boba-purple), var(--boba-accent));
+        }
+
+        .message-content {
+            background: var(--boba-surface);
+            padding: 12px 16px;
+            border-radius: 16px;
+            max-width: 70%;
+            line-height: 1.6;
+        }
+
+        .message.user .message-content {
+            background: rgba(139, 92, 246, 0.2);
+        }
+
+        .message-tools {
+            display: flex;
+            gap: 10px;
+            margin-top: 8px;
+            flex-wrap: wrap;
+        }
+
+        .tool-badge {
+            background: rgba(139, 92, 246, 0.15);
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        /* Input Area */
+        .input-area {
+            padding: 20px;
+            border-top: 1px solid rgba(139, 92, 246, 0.2);
+        }
+
+        .input-container {
+            display: flex;
+            gap: 10px;
+            background: var(--boba-surface);
+            border-radius: 16px;
+            padding: 8px;
+            border: 2px solid rgba(139, 92, 246, 0.1);
+            transition: border-color 0.2s;
+        }
+
+        .input-container:focus-within {
+            border-color: var(--boba-purple);
+        }
+
+        #userInput {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: var(--boba-text);
+            font-size: 0.95rem;
+            padding: 8px;
+            resize: none;
+            outline: none;
+            font-family: inherit;
+            max-height: 120px;
+        }
+
+        .send-btn {
+            background: var(--boba-purple);
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .send-btn:hover {
+            background: var(--boba-accent);
+            transform: scale(1.05);
+        }
+
+        .send-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Settings Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--boba-surface);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            border: 1px solid rgba(139, 92, 246, 0.3);
+        }
+
+        .modal h2 {
+            margin-bottom: 20px;
+            color: var(--boba-accent);
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: var(--boba-muted);
+            font-size: 0.9rem;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            border-radius: 8px;
+            color: var(--boba-text);
+            font-family: inherit;
+        }
+
+        .provider-list {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .provider-card {
+            padding: 12px;
+            border: 2px solid rgba(139, 92, 246, 0.2);
+            border-radius: 10px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+        }
+
+        .provider-card:hover {
+            border-color: var(--boba-purple);
+            background: rgba(139, 92, 246, 0.1);
+        }
+
+        .provider-card.active {
+            border-color: var(--boba-accent);
+            background: rgba(139, 92, 246, 0.2);
+        }
+
+        .save-btn {
+            background: var(--boba-purple);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            font-weight: 600;
+            margin-top: 15px;
+        }
+
+        .typing-indicator {
+            display: flex;
+            gap: 4px;
+            padding: 8px;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--boba-muted);
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-10px); }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 60px;
+                padding: 10px;
+            }
+            .sidebar .boba-logo span,
+            .sidebar .new-chat-btn span,
+            .sidebar .chat-item span,
+            .sidebar .settings-btn span {
+                display: none;
+            }
+            .message-content {
+                max-width: 85%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="boba-logo">
+                <span class="emoji">🧋</span>
+                <span>Boba AI</span>
+            </div>
+            <button class="new-chat-btn" onclick="BobaApp.newChat()">
+                <span>✨</span> <span>New Chat</span>
+            </button>
+            <div class="chat-list" id="chatList"></div>
+            <button class="settings-btn" onclick="BobaApp.openSettings()">
+                <span>⚙️</span> <span>Settings</span>
+            </button>
+        </div>
+
+        <!-- Chat Area -->
+        <div class="chat-area">
+            <div class="chat-header">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="font-weight: 600;">Boba AI</span>
+                    <span class="provider-badge" id="providerBadge">
+                        🧋 Boba (Offline)
+                    </span>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <button class="tool-badge" onclick="BobaApp.toggleSearchMode()" id="searchModeBtn">
+                        🔍 Hybrid
+                    </button>
+                </div>
+            </div>
+            
+            <div class="messages-container" id="messagesContainer">
+                <div class="message assistant">
+                    <div class="message-avatar">🧋</div>
+                    <div class="message-content">
+                        Welcome back! What are we building today? 🧋
+                        <br><br>
+                        <small style="color: var(--boba-muted);">
+                            I'm running in offline mode right now. Connect an AI provider in settings for even more capabilities!
+                        </small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="input-area">
+                <div class="input-container">
+                    <textarea 
+                        id="userInput" 
+                        placeholder="Ask me anything..." 
+                        rows="1"
+                        onkeydown="BobaApp.handleInput(event)"
+                    ></textarea>
+                    <button class="send-btn" onclick="BobaApp.sendMessage()" id="sendBtn">
+                        ➤
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal" id="settingsModal">
+        <div class="modal-content">
+            <h2>⚙️ AI Settings</h2>
+            
+            <div class="form-group">
+                <label>AI Provider</label>
+                <div class="provider-list" id="providerList"></div>
+            </div>
+
+            <div id="providerSettings">
+                <div class="form-group">
+                    <label>API Key</label>
+                    <input type="password" id="apiKey" placeholder="sk-...">
+                </div>
+                <div class="form-group">
+                    <label>Base URL (optional)</label>
+                    <input type="text" id="baseUrl" placeholder="https://api.openai.com/v1">
+                </div>
+                <div class="form-group">
+                    <label>Model</label>
+                    <input type="text" id="modelName" placeholder="gpt-4">
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div class="form-group">
+                        <label>Temperature</label>
+                        <input type="number" id="temperature" min="0" max="2" step="0.1" value="0.7">
+                    </div>
+                    <div class="form-group">
+                        <label>Max Tokens</label>
+                        <input type="number" id="maxTokens" min="1" max="32000" value="2000">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>System Prompt</label>
+                    <textarea id="systemPrompt" rows="4" placeholder="Custom system prompt..."></textarea>
+                </div>
+            </div>
+
+            <button class="save-btn" onclick="BobaApp.saveSettings()">💾 Save Settings</button>
+            <button style="background: transparent; border: 1px solid rgba(139,92,246,0.3); color: var(--boba-text); padding: 10px; border-radius: 8px; cursor: pointer; width: 100%; margin-top: 10px;" onclick="BobaApp.closeSettings()">Cancel</button>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // BOBA AI - CORE ARCHITECTURE
+        // ============================================
+
+        class BobaAI {
+            constructor() {
+                // Core systems
+                this.memory = new MemorySystem();
+                this.personality = new PersonalityEngine();
+                this.tools = new ToolRegistry();
+                this.providers = new ProviderManager();
+                this.conversations = new ConversationManager();
+                this.searchEngine = new BobaSniper();
+                
+                // Current state
+                this.currentConversationId = null;
+                this.currentProvider = 'boba-offline';
+                this.searchMode = 'hybrid'; // classic, ai, hybrid
+                this.isProcessing = false;
+            }
+
+            async initialize() {
+                // Load saved settings
+                const settings = this.loadSettings();
+                if (settings) {
+                    this.currentProvider = settings.provider || 'boba-offline';
+                    this.providers.configure(settings);
+                }
+                
+                // Initialize tools
+                this.tools.register('calculator', new CalculatorTool());
+                this.tools.register('weather', new WeatherTool());
+                this.tools.register('unit-converter', new UnitConverterTool());
+                this.tools.register('translator', new TranslatorTool());
+                this.tools.register('notes', new NotesTool());
+                
+                // Create initial conversation
+                this.currentConversationId = this.conversations.create();
+                
+                return this;
+            }
+
+            async processMessage(userMessage) {
+                if (this.isProcessing) return null;
+                this.isProcessing = true;
+
+                try {
+                    // 1. Add to conversation
+                    this.conversations.addMessage(this.currentConversationId, {
+                        role: 'user',
+                        content: userMessage,
+                        timestamp: Date.now()
+                    });
+
+                    // 2. Check if tools are needed
+                    const toolAnalysis = this.tools.analyzeIntent(userMessage);
+                    
+                    // 3. Get conversation context
+                    const context = this.memory.getContext(this.currentConversationId);
+                    
+                    // 4. Build prompt with personality
+                    const systemPrompt = this.personality.buildSystemPrompt({
+                        tools: toolAnalysis.availableTools,
+                        context: context,
+                        searchMode: this.searchMode
+                    });
+
+                    // 5. Get AI response
+                    let response;
+                    
+                    if (this.currentProvider === 'boba-offline') {
+                        response = await this.handleOfflineResponse(userMessage, toolAnalysis);
+                    } else {
+                        response = await this.providers.generate({
+                            provider: this.currentProvider,
+                            systemPrompt: systemPrompt,
+                            messages: this.conversations.getMessages(this.currentConversationId),
+                            tools: toolAnalysis.availableTools
+                        });
+                    }
+
+                    // 6. Execute tools if needed
+                    if (response.toolCalls) {
+                        const toolResults = await this.tools.execute(response.toolCalls);
+                        response.content += '\n\n' + this.formatToolResults(toolResults);
+                    }
+
+                    // 7. Search integration
+                    if (this.shouldSearch(userMessage)) {
+                        const searchResults = await this.searchEngine.search(userMessage, this.searchMode);
+                        response.content += '\n\n' + this.formatSearchResults(searchResults);
+                    }
+
+                    // 8. Add response to conversation
+                    this.conversations.addMessage(this.currentConversationId, {
+                        role: 'assistant',
+                        content: response.content,
+                        timestamp: Date.now(),
+                        metadata: {
+                            provider: this.currentProvider,
+                            toolsUsed: response.toolCalls || [],
+                            searchUsed: this.searchMode
+                        }
+                    });
+
+                    // 9. Update memory
+                    this.memory.updateContext(this.currentConversationId, userMessage, response.content);
+
+                    return response;
+                } catch (error) {
+                    console.error('Boba AI Error:', error);
+                    return {
+                        content: this.personality.getErrorMessage(error),
+                        error: true
+                    };
+                } finally {
+                    this.isProcessing = false;
+                }
+            }
+
+            async handleOfflineResponse(message, toolAnalysis) {
+                // Pattern-based responses with personality
+                const patterns = [
+                    { pattern: /\b(?:hi|hello|hey|greetings)\b/i, responses: [
+                        "Hey there! 👋 What's on your mind today?",
+                        "Hello! Ready to tackle some interesting problems? 🧋",
+                        "Hi! Always happy to see you. What shall we explore?"
+                    ]},
+                    { pattern: /\b(?:how are you|how's it going)\b/i, responses: [
+                        "Running smoothly! Ready to help with whatever you need. 😊",
+                        "Feeling great! Even better now that you're here. What can I do for you?",
+                        "All systems go! What would you like to work on?"
+                    ]},
+                    { pattern: /\b(?:calculate|math|solve|equation)\b/i, responses: [
+                        "Let me crunch those numbers for you! Just share the equation. 🔢",
+                        "Math time! I love solving problems. What's the equation?"
+                    ]},
+                    { pattern: /\b(?:weather|temperature|forecast)\b/i, responses: [
+                        "I'd love to check the weather! 🌤️ Connect me to the internet or an AI provider for real-time data.",
+                        "Weather updates need an internet connection. Want to switch to an online provider?"
+                    ]},
+                    { pattern: /\b(?:thanks|thank you|thx)\b/i, responses: [
+                        "You're welcome! Happy to help. 😊",
+                        "Anytime! That's what I'm here for. 🧋",
+                        "No problem at all! Come back anytime."
+                    ]}
+                ];
+
+                for (const { pattern, responses } of patterns) {
+                    if (pattern.test(message)) {
+                        const response = responses[Math.floor(Math.random() * responses.length)];
+                        
+                        // Add context about being offline
+                        const offlineNote = this.currentProvider === 'boba-offline' ? 
+                            '\n\n💡 *I\'m in offline mode right now. Connect an AI provider in Settings for more advanced capabilities!*' : '';
+                        
+                        return {
+                            content: response + offlineNote,
+                            offline: true
+                        };
+                    }
+                }
+
+                // Default intelligent response
+                return {
+                    content: `I understand you're asking about "${message}". In offline mode, I can help with:\n\n` +
+                        `• Basic calculations and math\n` +
+                        `• Unit conversions\n` +
+                        `• Taking notes\n` +
+                        `• General conversation\n\n` +
+                        `For more advanced help, try connecting an AI provider like OpenAI or Claude in the Settings! 🧋\n\n` +
+                        `What specific aspect would you like me to help with?`,
+                    offline: true
+                };
+            }
+
+            shouldSearch(message) {
+                const searchTriggers = /\b(?:search|find|look up|what is|who is|when was|where is|how to|news|latest|current)\b/i;
+                return searchTriggers.test(message);
+            }
+
+            formatToolResults(results) {
+                return results.map(r => `🔧 **${r.tool}**: ${r.result}`).join('\n');
+            }
+
+            formatSearchResults(results) {
+                if (!results || results.length === 0) return '';
+                return `\n🔍 **Search Results**:\n${results.map(r => `• ${r.title}: ${r.snippet}`).join('\n')}`;
+            }
+
+            loadSettings() {
+                try {
+                    return JSON.parse(localStorage.getItem('boba-ai-settings'));
+                } catch {
+                    return null;
+                }
+            }
+
+            saveSettings(settings) {
+                localStorage.setItem('boba-ai-settings', JSON.stringify(settings));
+            }
+        }
+
+        // ============================================
+        // MEMORY SYSTEM
+        // ============================================
+        class MemorySystem {
+            constructor() {
+                this.shortTerm = new Map(); // Conversation ID -> messages
+                this.longTerm = new Map();  // User ID -> preferences
+                this.contextWindow = 10;    // Last N messages to keep in context
+            }
+
+            getContext(conversationId) {
+                const messages = this.shortTerm.get(conversationId) || [];
+                return messages.slice(-this.contextWindow);
+            }
+
+            updateContext(conversationId, userMessage, aiResponse) {
+                if (!this.shortTerm.has(conversationId)) {
+                    this.shortTerm.set(conversationId, []);
+                }
+                
+                const context = this.shortTerm.get(conversationId);
+                context.push({ user: userMessage, assistant: aiResponse });
+                
+                // Keep only recent context
+                if (context.length > this.contextWindow * 2) {
+                    this.shortTerm.set(conversationId, context.slice(-this.contextWindow));
+                }
+            }
+
+            setPreference(key, value) {
+                this.longTerm.set(key, value);
+                this.saveToStorage();
+            }
+
+            getPreference(key) {
+                return this.longTerm.get(key);
+            }
+
+            saveToStorage() {
+                const prefs = Object.fromEntries(this.longTerm);
+                localStorage.setItem('boba-memory', JSON.stringify(prefs));
+            }
+
+            loadFromStorage() {
+                try {
+                    const prefs = JSON.parse(localStorage.getItem('boba-memory'));
+                    if (prefs) {
+                        this.longTerm = new Map(Object.entries(prefs));
+                    }
+                } catch (e) {
+                    console.warn('Could not load memory:', e);
+                }
+            }
+        }
+
+        // ============================================
+        // PERSONALITY ENGINE
+        // ============================================
+        class PersonalityEngine {
+            constructor() {
+                this.traits = {
+                    friendly: 0.9,
+                    playful: 0.6,
+                    helpful: 0.95,
+                    honest: 1.0,
+                    encouraging: 0.8
+                };
+
+                this.bobaPhrases = [
+                    "Let's brew some ideas! 🧋",
+                    "Steeping on that thought...",
+                    "Here's what I'm thinking:",
+                    "That's a tasty question!",
+                    "Let me bubble up an answer for you",
+                ];
+
+                this.emojis = ['🧋', '✨', '💡', '🎯', '🚀', '💪', '🌟'];
+            }
+
+            buildSystemPrompt(context = {}) {
+                return `You are Boba AI, a friendly and intelligent assistant. 
+
+PERSONALITY:
+- Warm and welcoming, like chatting with a knowledgeable friend
+- Occasionally uses tea/boba references naturally (not forced)
+- Honest when uncertain, never pretends to know
+- Encourages curiosity and learning
+- Speaks naturally, avoids robotic or generic phrases
+- Uses light humor appropriately
+
+CAPABILITIES:
+- Multi-turn conversations with context awareness
+- Problem-solving and reasoning
+- Tool usage (calculator, weather, etc.)
+- Search integration
+- Clear explanations
+
+${context.tools ? `Available tools: ${context.tools.join(', ')}` : ''}
+${context.searchMode ? `Search mode: ${context.searchMode}` : ''}
+
+Remember: You are uniquely Boba AI, not a generic assistant. Be yourself! 🧋`;
+            }
+
+            getGreeting() {
+                const greetings = [
+                    "Welcome back! What are we building today? 🧋",
+                    "Hey there! Ready to explore some ideas? ✨",
+                    "Good to see you! What's on your mind? 💡",
+                    "Boba AI here! What shall we work on? 🚀"
+                ];
+                return greetings[Math.floor(Math.random() * greetings.length)];
+            }
+
+            getErrorMessage(error) {
+                const messages = {
+                    'network': "Oops! Having trouble connecting. Let's try again in a moment. 🔄",
+                    'api_key': "I need an API key to access that provider. You can set it up in Settings! ⚙️",
+                    'rate_limit': "Taking a quick breather! Rate limit reached. Try again shortly. 🫖",
+                    'default': "Something unexpected happened, but don't worry! Let's try a different approach. 💪"
+                };
+                return messages[error.type] || messages.default;
+            }
+
+            getRandomPhrase() {
+                return this.bobaPhrases[Math.floor(Math.random() * this.bobaPhrases.length)];
+            }
+
+            getRandomEmoji() {
+                return this.emojis[Math.floor(Math.random() * this.emojis.length)];
+            }
+        }
+
+        // ============================================
+        // PROVIDER MANAGER
+        // ============================================
+        class ProviderManager {
+            constructor() {
+                this.providers = {
+                    'boba-offline': { name: 'Boba AI (Offline)', type: 'offline', icon: '🧋' },
+                    'openai': { name: 'OpenAI', type: 'api', icon: '🤖', defaultUrl: 'https://api.openai.com/v1' },
+                    'anthropic': { name: 'Anthropic Claude', type: 'api', icon: '🎯', defaultUrl: 'https://api.anthropic.com/v1' },
+                    'gemini': { name: 'Google Gemini', type: 'api', icon: '🌐', defaultUrl: 'https://generativelanguage.googleapis.com/v1' },
+                    'grok': { name: 'Grok', type: 'api', icon: '⚡', defaultUrl: 'https://api.grok.ai/v1' },
+                    'deepseek': { name: 'DeepSeek', type: 'api', icon: '🔮', defaultUrl: 'https://api.deepseek.com/v1' },
+                    'ollama': { name: 'Ollama (Local)', type: 'local', icon: '🖥️', defaultUrl: 'http://localhost:11434' },
+                    'custom': { name: 'Custom API', type: 'custom', icon: '🔌', defaultUrl: '' }
+                };
+                
+                this.config = {};
+            }
+
+            configure(settings) {
+                this.config = {
+                    provider: settings.provider || 'boba-offline',
+                    apiKey: settings.apiKey || '',
+                    baseUrl: settings.baseUrl || '',
+                    model: settings.model || 'gpt-3.5-turbo',
+                    temperature: settings.temperature || 0.7,
+                    maxTokens: settings.maxTokens || 2000,
+                    systemPrompt: settings.systemPrompt || '',
+                };
+            }
+
+            async generate({ provider, systemPrompt, messages, tools }) {
+                if (provider === 'boba-offline') {
+                    throw new Error('Offline provider should be handled separately');
+                }
+
+                const providerConfig = this.providers[provider];
+                const config = this.config;
+
+                // Build API request based on provider
+                const request = this.buildRequest(provider, {
+                    systemPrompt: systemPrompt || config.systemPrompt,
+                    messages: messages,
+                    model: config.model,
+                    temperature: config.temperature,
+                    maxTokens: config.maxTokens,
+                    tools: tools
+                });
+
+                // Make API call
+                const response = await this.makeAPIRequest(provider, request);
+                
+                return this.parseResponse(provider, response);
+            }
+
+            buildRequest(provider, params) {
+                // Format request based on provider's API format
+                const baseRequest = {
+                    model: params.model,
+                    temperature: params.temperature,
+                    max_tokens: params.maxTokens,
+                    messages: [
+                        { role: 'system', content: params.systemPrompt },
+                        ...params.messages.slice(-5) // Last 5 messages for context
+                    ]
+                };
+
+                // Provider-specific adjustments
+                switch(provider) {
+                    case 'anthropic':
+                        baseRequest.system = params.systemPrompt;
+                        delete baseRequest.messages[0];
+                        break;
+                    case 'gemini':
+                        // Gemini has different format
+                        break;
+                }
+
+                return baseRequest;
+            }
+
+            async makeAPIRequest(provider, request) {
+                const config = this.config;
+                const url = config.baseUrl || this.providers[provider].defaultUrl;
+                
+                // This would be a real API call in production
+                // For now, simulate with a timeout
+                return new Promise((resolve) => {
+                    setTimeout(() => {
+                        resolve({
+                            choices: [{
+                                message: {
+                                    content: `[${provider.toUpperCase()} RESPONSE]\n\nThis is a simulated response from ${this.providers[provider].name}. In production, this would connect to the actual API.\n\nTo use this provider:\n1. Add your API key in Settings\n2. Configure the endpoint\n3. Start chatting!\n\nYour message has been received and would be processed by the AI model. 🧋`
+                                }
+                            }]
+                        });
+                    }, 1000);
+                });
+            }
+
+            parseResponse(provider, response) {
+                // Normalize different provider responses to a common format
+                return {
+                    content: response.choices?.[0]?.message?.content || response.content || 'No response generated',
+                    toolCalls: response.choices?.[0]?.message?.tool_calls || null,
+                    usage: response.usage || null
+                };
+            }
+
+            getProviders() {
+                return Object.entries(this.providers).map(([id, info]) => ({
+                    id,
+                    ...info
+                }));
+            }
+        }
+
+        // ============================================
+        // CONVERSATION MANAGER
+        // ============================================
+        class ConversationManager {
+            constructor() {
+                this.conversations = new Map();
+                this.loadFromStorage();
+            }
+
+            create(title = 'New Chat') {
+                const id = Date.now().toString(36) + Math.random().toString(36).substr(2);
+                this.conversations.set(id, {
+                    id,
+                    title,
+                    messages: [],
+                    createdAt: Date.now(),
+                    updatedAt: Date.now()
+                });
